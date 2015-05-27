@@ -66,6 +66,13 @@ In addition to the above environment variables the following can be optionally u
    configuration errors caused by the unexpected production of hidden
    bitcode files.
 
+* `BITCODE_DIR`. Normally, when `BITCODE_DIR` is not set, bitcode files are
+   placed in the same directories as object files.  However, some build
+   systems build object files into temporary directories, and hence after
+   the build, bitcode files would be gone and `extract-bc` would not work.
+   When `BITCODE_DIR` is set, bitcode files are placed under the directory
+   specified in `BITCODE_DIR`.  Subdirectories of `BITCODE_DIR` are created
+   to prevent name collisions.
 
 Building a bitcode module with clang
 ====================================

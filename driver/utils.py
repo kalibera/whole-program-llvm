@@ -381,7 +381,15 @@ class ArgumentListFilter(object):
         path = ''
         if self.outputFilename is not None:
             path = os.path.dirname(self.outputFilename)
-        return [os.path.join(path, objbase), os.path.join(path, bcbase)]
+        bcpath = path
+        bcpenv = os.getenv('BITCODE_DIR')
+        if bcpenv is not None:
+            cwdrive, cwpath = os.path.splitdrive(os.path.normpath(os.getcwd()))
+            bcpath = os.path.join(bcpenv, cwpath[1:], path)  # FIXME: only tested on Linux
+            if not os.path.exists(bcpath):
+                os.makedirs(bcpath)
+
+        return [os.path.join(path, objbase), os.path.join(bcpath, bcbase)]
 
     #iam: for printing our partitioning of the args
     def dump(self):
@@ -529,6 +537,10 @@ class BuilderBase(object):
     def getBitcodeFileName(self, argFilter):
         (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        bcpenv = os.getenv('BITCODE_DIR')
+        if bcpenv is not None:
+            cwdrive, cwpath = os.path.splitdrive(os.path.normpath(os.getcwd()))
+            bcfilename = os.path.join(bcpenv, cwpath[1:], bcfilename) # FIXME: only tested on Linux
         return bcfilename
 
 class ClangBuilder(BuilderBase):
@@ -555,6 +567,7 @@ class ClangBuilder(BuilderBase):
     def attachBitcode(self, argFilter):
         bcname = self.getBitcodeFileName(argFilter)
         outFile = argFilter.getOutputFilename()
+        print("attachBitcode bcname=" + bcname + " outFile=" + outFile)
         attachBitcodePathToObject(bcname, outFile)
 
 #iam: this should join the dodo soon, yes?
