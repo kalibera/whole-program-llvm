@@ -35,6 +35,20 @@ _logger = logging.getLogger(__name__)
 # Flag for dumping
 DUMPING = False
 
+def prefixPathWithBitcodeDir(path):
+    bcpenv = os.getenv('BITCODE_DIR')
+    if bcpenv is not None:
+        cwdrive, cwpath = os.path.splitdrive(os.path.normpath(os.getcwd()))
+        path = os.path.join(bcpenv, cwpath[1:], path)  # FIXME: only tested on Linux
+        try:
+            os.makedirs(path)
+        except OSError as e:
+            if e.errno == errno.EEXIST and os.path.exists(path):
+                pass
+            else: raise
+
+    return path
+
 
 # This class applies filters to GCC argument lists.  It has a few
 # default arguments that it records, but does not modify the argument
@@ -381,14 +395,7 @@ class ArgumentListFilter(object):
         path = ''
         if self.outputFilename is not None:
             path = os.path.dirname(self.outputFilename)
-        bcpath = path
-        bcpenv = os.getenv('BITCODE_DIR')
-        if bcpenv is not None:
-            cwdrive, cwpath = os.path.splitdrive(os.path.normpath(os.getcwd()))
-            bcpath = os.path.join(bcpenv, cwpath[1:], path)  # FIXME: only tested on Linux
-            if not os.path.exists(bcpath):
-                os.makedirs(bcpath)
-
+        bcpath = prefixPathWithBitcodeDir(path)
         return [os.path.join(path, objbase), os.path.join(bcpath, bcbase)]
 
     #iam: for printing our partitioning of the args
@@ -537,10 +544,7 @@ class BuilderBase(object):
     def getBitcodeFileName(self, argFilter):
         (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        bcpenv = os.getenv('BITCODE_DIR')
-        if bcpenv is not None:
-            cwdrive, cwpath = os.path.splitdrive(os.path.normpath(os.getcwd()))
-            bcfilename = os.path.join(bcpenv, cwpath[1:], bcfilename) # FIXME: only tested on Linux
+        bcfilename = prefixPathWithBitcodeDir(bcfilename)
         return bcfilename
 
 class ClangBuilder(BuilderBase):
