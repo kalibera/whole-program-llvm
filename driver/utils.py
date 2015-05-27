@@ -543,8 +543,8 @@ class BuilderBase(object):
     #clang and drogonegg share the same taste in bitcode filenames.
     def getBitcodeFileName(self, argFilter):
         (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
+        dirs = prefixPathWithBitcodeDir(dirs)
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        bcfilename = prefixPathWithBitcodeDir(bcfilename)
         return bcfilename
 
 class ClangBuilder(BuilderBase):
